@@ -15,11 +15,11 @@ library(tidyr)
 source("NRS style.R")
 
 # Read data
-data_death <- read_excel("data_week_32.xlsx", 
+data_death <- read_excel("Copy of Infographic data week 50.xlsx", 
                         sheet = "deaths") %>%
   filter(week >= 12)
 
-data_age <- read_excel("data_week_32.xlsx", 
+data_age <- read_excel("Copy of Infographic data week 50.xlsx", 
                          sheet = "age") %>%
   filter(week >= 12) %>%
   mutate(deaths_other = deaths_all - deaths_covid) %>%
@@ -33,7 +33,7 @@ plot_1 <- ggplot(data = data_death) +
                          y = deaths),
            col = col_neut_white,
            fill = col_deaths) +
-  scale_x_continuous(breaks = min(data_death[["week"]]):max(data_death[["week"]])) +
+  scale_x_continuous(breaks = seq(min(data_death[["week"]]), max(data_death[["week"]]), 2)) +
   geom_text(
     mapping = aes(x = week,
                   y = deaths / 2,
@@ -46,10 +46,17 @@ plot_1 <- ggplot(data = data_death) +
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank()
-  )
+  ) 
 
 
 # Plot 2 - 2020 deaths by age ---------------------------------------------
+
+# stops axis being decimal source: 
+# https://stackoverflow.com/questions/42588238/setting-individual-y-axis-limits-with-facet-wrap-not-with-scales-free-y
+data_age <- data.table::data.table(data_age)
+data_age[,y_min:= count*0.5, by = age_group]
+data_age[,y_max:= count*1.5, by = age_group] 
+
 plot_2 <- ggplot(data = data_age) +
   geom_area(mapping = aes(x = week,
                           y = count,
@@ -60,10 +67,13 @@ plot_2 <- ggplot(data = data_age) +
             linetype = 'longdash') +
   scale_fill_manual(values = c(col_deaths, col_neut_silver)) +
   scale_x_continuous(name="Week number",
-                     breaks = seq(from = min(data_age[["week"]]),
+                     breaks = c(seq(from = min(data_age[["week"]]),
                                   to = max(data_age[["week"]]),
-                                  by = 2)) +
-  facet_wrap(~ age_group, ncol = 2, scales = "free_y") +
+                                  by = 4), 50)) +
+  facet_wrap(~ age_group, ncol = 2, scales = "free_y"
+             ) +
+  geom_blank(aes(y = y_min)) + # stops axis being decimal see line 55
+  geom_blank(aes(y = y_max)) + # stops axis being decimal see line 55
   theme(
     
     # Declutter
@@ -83,7 +93,7 @@ plot_2 <- ggplot(data = data_age) +
     plot.margin = unit(c(0,0,0,0), 'npc'),
     panel.spacing = unit(0.1, 'npc')
   )
-
+plot_2
 
 # Save plots --------------------------------------------------------------
 
